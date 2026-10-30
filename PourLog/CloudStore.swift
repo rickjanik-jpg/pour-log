@@ -8,8 +8,8 @@ import UIKit
 @MainActor
 @Observable
 final class CloudStore {
-    // ⚠️ Change this to the container you create under Signing & Capabilities → iCloud.
-    static let containerID = "iCloud.com.yourname.PourLog"
+    // Must match the container in PourLog.entitlements and the Apple Developer portal.
+    static let containerID = "iCloud.com.rickjanik.PourLog"
 
     @ObservationIgnored private let container = CKContainer(identifier: CloudStore.containerID)
     private var db: CKDatabase { container.publicCloudDatabase }
