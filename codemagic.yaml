@@ -10,7 +10,7 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.rickjanik.PourLog
       vars:
-        APP_STORE_APPLE_ID: 0000000000     # replace with the Apple ID number from App Store Connect → App Information
+        APP_STORE_APPLE_ID: 6829103284
       xcode: latest
     triggering:
       events:
