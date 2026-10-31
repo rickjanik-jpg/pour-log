@@ -8,7 +8,7 @@ struct NewPourView: View {
     @Environment(LocationService.self) private var locator
     @Environment(\.dismiss) private var dismiss
 
-    @State private var drink = "Old Fashioned"
+    @State private var drink = Drinks.all[0]
     @State private var otherDrink = ""
     @State private var venue = ""
     @State private var city = ""
@@ -115,7 +115,7 @@ struct NewPourView: View {
                 }
 
                 Section("Notes") {
-                    TextField("Bourbon or rye? Orange peel or cherry? Worth the drive?",
+                    TextField("Bourbon or rye? Demerara or simple? Orange peel or cherry? Worth the drive?",
                               text: $notes, axis: .vertical)
                         .lineLimit(3...8)
                 }

@@ -26,8 +26,16 @@ enum Theme {
 }
 
 enum Drinks {
-    static let all = ["Old Fashioned", "Manhattan", "Negroni", "Martini", "Margarita",
-                      "Whiskey neat", "Beer", "Wine", "Other"]
+    static let all = [
+        "Old Fashioned",           // the classic
+        "Bourbon Old Fashioned",
+        "Rye Old Fashioned",
+        "Mezcal Old Fashioned",
+        "Rum Old Fashioned",
+        "Brandy Old Fashioned",    // Wisconsin style
+        "Tequila Old Fashioned",
+        "Other Old Fashioned",
+    ]
 }
 
 extension String {

@@ -17,7 +17,7 @@ struct FeedView: View {
                     ContentUnavailableView {
                         Label("Nothing poured yet", systemImage: "wineglass")
                     } description: {
-                        Text(store.errorMessage ?? "Tap + to log your first drink with a photo, the spot and a rating.")
+                        Text(store.errorMessage ?? "Tap + to log your first Old Fashioned — photo, the bar, and a rating.")
                     } actions: {
                         Button("Log a drink") { showNew = true }
                             .buttonStyle(.borderedProminent)
@@ -47,7 +47,7 @@ struct FeedView: View {
             .overlay {
                 if store.isLoading && store.pours.isEmpty { ProgressView() }
             }
-            .navigationTitle("The Pour Log")
+            .navigationTitle("The Muddler")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     DrinkFilterMenu(filter: $filter, kinds: store.drinkKinds)
