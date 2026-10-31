@@ -1,1 +1,41 @@
-null
+workflows:
+  testflight:
+    name: Pour Log to TestFlight
+    max_build_duration: 45
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: PourLog ASC Key   # must match the API key name you add in Codemagic
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.rickjanik.PourLog
+      vars:
+        APP_STORE_APPLE_ID: 0000000000     # replace with the Apple ID number from App Store Connect → App Information
+      xcode: latest
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+    scripts:
+      - name: Generate Xcode project
+        script: |
+          brew install xcodegen
+          xcodegen generate
+      - name: Apply signing profiles
+        script: xcode-project use-profiles
+      - name: Increment build number
+        script: |
+          LATEST=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" || echo 0)
+          agvtool new-version -all $(($LATEST + 1))
+      - name: Build IPA
+        script: |
+          xcode-project build-ipa --project PourLog.xcodeproj --scheme PourLog
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false
