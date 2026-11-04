@@ -18,6 +18,10 @@ struct Pour: Identifiable, Hashable {
     var photoURL: URL?
     /// The iCloud user record name of whoever logged it.
     var creatorID: String?
+    // Social
+    var likeCount: Int = 0
+    var likedByMe: Bool = false
+    var commentCount: Int = 0
 
     init(record: CKRecord, myID: String?) {
         id = record.recordID
@@ -52,6 +56,46 @@ struct Pour: Identifiable, Hashable {
         return c.url
     }
 }
+
+// MARK: - Comment
+
+struct Comment: Identifiable {
+    static let recordType = "Comment"
+
+    let id: CKRecord.ID
+    var pourID: String
+    var text: String
+    var creatorID: String?
+    var createdAt: Date
+
+    init(record: CKRecord, myID: String?) {
+        id = record.recordID
+        pourID = record["pourID"] as? String ?? ""
+        text = record["text"] as? String ?? ""
+        createdAt = record["createdAt"] as? Date ?? record.creationDate ?? .distantPast
+        let raw = record.creatorUserRecordID?.recordName
+        creatorID = (raw == nil || raw == CKCurrentUserDefaultName) ? myID : raw
+    }
+}
+
+// MARK: - Like
+
+struct Like: Identifiable {
+    static let recordType = "Like"
+
+    let id: CKRecord.ID
+    var pourID: String
+    var creatorID: String?
+
+    init(record: CKRecord, myID: String?) {
+        id = record.recordID
+        pourID = record["pourID"] as? String ?? ""
+        let raw = record.creatorUserRecordID?.recordName
+        creatorID = (raw == nil || raw == CKCurrentUserDefaultName) ? myID : raw
+    }
+}
+
+// MARK: - Leaderboard
 
 struct LeaderRow: Identifiable {
     let id: String          // creator's user record name

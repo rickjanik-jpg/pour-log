@@ -122,6 +122,84 @@ final class CloudStore {
         }
     }
 
+    // MARK: Likes
+
+    /// Like record ID is deterministic so each user can only like a pour once.
+    private func likeRecordID(for pour: Pour) -> CKRecord.ID? {
+        guard let myID else { return nil }
+        return CKRecord.ID(recordName: "like-\(pour.id.recordName)-\(myID)")
+    }
+
+    func toggleLike(_ pour: Pour) async {
+        guard let rid = likeRecordID(for: pour),
+              let idx = pours.firstIndex(of: pour) else { return }
+        if pours[idx].likedByMe {
+            // Unlike
+            pours[idx].likedByMe = false
+            pours[idx].likeCount = max(0, pours[idx].likeCount - 1)
+            try? await db.deleteRecord(withID: rid)
+        } else {
+            // Like
+            pours[idx].likedByMe = true
+            pours[idx].likeCount += 1
+            let rec = CKRecord(recordType: Like.recordType, recordID: rid)
+            rec["pourID"] = pour.id.recordName
+            try? await db.save(rec)
+        }
+    }
+
+    func loadLikes(for pour: Pour) async {
+        guard let myID, let idx = pours.firstIndex(of: pour) else { return }
+        let pred = NSPredicate(format: "pourID == %@", pour.id.recordName)
+        let query = CKQuery(recordType: Like.recordType, predicate: pred)
+        guard let (results, _) = try? await db.records(matching: query, resultsLimit: 1000) else { return }
+        let likes = results.compactMap { try? $0.1.get() }.map { Like(record: $0, myID: myID) }
+        pours[idx].likeCount = likes.count
+        pours[idx].likedByMe = likes.contains { $0.creatorID == myID }
+    }
+
+    // MARK: Comments
+
+    func loadComments(for pour: Pour) async -> [Comment] {
+        let pred = NSPredicate(format: "pourID == %@", pour.id.recordName)
+        let query = CKQuery(recordType: Comment.recordType, predicate: pred)
+        query.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: true)]
+        guard let (results, _) = try? await db.records(matching: query, resultsLimit: 200) else { return [] }
+        let comments = results.compactMap { try? $0.1.get() }.map { Comment(record: $0, myID: myID) }
+        // Update comment count in feed
+        if let idx = pours.firstIndex(of: pour) {
+            pours[idx].commentCount = comments.count
+        }
+        // Load any new names
+        await loadNamesFor(ids: Set(comments.compactMap(\.creatorID)))
+        return comments
+    }
+
+    func addComment(to pour: Pour, text: String) async throws -> Comment {
+        let rec = CKRecord(recordType: Comment.recordType)
+        rec["pourID"] = pour.id.recordName
+        rec["text"] = text
+        rec["createdAt"] = Date()
+        let saved = try await db.save(rec)
+        let comment = Comment(record: saved, myID: myID)
+        if let idx = pours.firstIndex(of: pour) {
+            pours[idx].commentCount += 1
+        }
+        return comment
+    }
+
+    private func loadNamesFor(ids: Set<String>) async {
+        let missing = ids.filter { names[$0] == nil }
+        guard !missing.isEmpty else { return }
+        let recordIDs = missing.map { CKRecord.ID(recordName: "drinker-" + $0) }
+        guard let results = try? await db.records(for: recordIDs) else { return }
+        for (rid, result) in results {
+            if let rec = try? result.get(), let name = rec["name"] as? String {
+                names[String(rid.recordName.dropFirst("drinker-".count))] = name
+            }
+        }
+    }
+
     // MARK: Derived data
 
     func displayName(for id: String?) -> String {

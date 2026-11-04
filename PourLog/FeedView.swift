@@ -28,16 +28,19 @@ struct FeedView: View {
                             Text(message).font(.footnote).foregroundStyle(.secondary)
                         }
                         ForEach(shown) { pour in
-                            PourCard(pour: pour, who: store.displayName(for: pour.creatorID))
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                                .swipeActions {
-                                    if pour.creatorID == store.myID {
-                                        Button("Delete", role: .destructive) {
-                                            Task { await store.delete(pour) }
-                                        }
+                            NavigationLink(value: pour) {
+                                PourCard(pour: pour, who: store.displayName(for: pour.creatorID))
+                            }
+                            .buttonStyle(.plain)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                            .swipeActions {
+                                if pour.creatorID == store.myID {
+                                    Button("Delete", role: .destructive) {
+                                        Task { await store.delete(pour) }
                                     }
                                 }
+                            }
                         }
                     }
                     .listStyle(.plain)
@@ -48,6 +51,9 @@ struct FeedView: View {
                 if store.isLoading && store.pours.isEmpty { ProgressView() }
             }
             .navigationTitle("The Muddler")
+            .navigationDestination(for: Pour.self) { pour in
+                PourDetailView(pour: pour)
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     DrinkFilterMenu(filter: $filter, kinds: store.drinkKinds)
@@ -120,6 +126,21 @@ struct PourCard: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(.top, 4)
+
+                // Social row
+                HStack(spacing: 14) {
+                    CardLikeButton(pour: pour)
+                    if pour.commentCount > 0 {
+                        HStack(spacing: 4) {
+                            Image(systemName: "bubble.left")
+                            Text("\(pour.commentCount)")
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                    }
+                    Spacer()
+                }
+                .padding(.top, 6)
             }
             .padding(14)
         }
@@ -153,6 +174,31 @@ struct PhotoView: View {
                     return await full.byPreparingThumbnail(ofSize: CGSize(width: w, height: h)) ?? full
                 }.value
             }
+    }
+}
+
+/// A heart button on the feed card — tapping it toggles the like without navigating.
+struct CardLikeButton: View {
+    @Environment(CloudStore.self) private var store
+    let pour: Pour
+
+    private var current: Pour { store.pours.first(where: { $0.id == pour.id }) ?? pour }
+
+    var body: some View {
+        Button {
+            Task { await store.toggleLike(current) }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: current.likedByMe ? "heart.fill" : "heart")
+                    .foregroundStyle(current.likedByMe ? Color.red : Color.secondary)
+                if current.likeCount > 0 {
+                    Text("\(current.likeCount)")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .font(.caption)
+        }
+        .buttonStyle(.plain)
     }
 }
 
