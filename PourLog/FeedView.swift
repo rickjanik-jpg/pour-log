@@ -35,7 +35,7 @@ struct FeedView: View {
                             .listRowSeparator(.hidden)
                             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                             .swipeActions {
-                                if pour.creatorID == store.myID {
+                                if pour.creatorID == store.myID || pour.creatorID == nil {
                                     Button("Delete", role: .destructive) {
                                         Task { await store.delete(pour) }
                                     }
@@ -105,15 +105,9 @@ struct PourCard: View {
                     if pour.rating > 0 { StarsLabel(rating: pour.rating) }
                 }
                 if !pour.placeLine.isEmpty {
-                    if let maps = pour.mapsURL {
-                        Link(destination: maps) {
-                            Label(pour.placeLine, systemImage: "mappin.and.ellipse")
-                        }
+                    Label(pour.placeLine, systemImage: "mappin.and.ellipse")
                         .font(.subheadline)
-                    } else {
-                        Label(pour.placeLine, systemImage: "mappin.and.ellipse")
-                            .font(.subheadline)
-                    }
+                        .foregroundStyle(.secondary)
                 }
                 if !pour.notes.isEmpty {
                     Text(pour.notes).font(.subheadline)

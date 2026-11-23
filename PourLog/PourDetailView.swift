@@ -38,17 +38,35 @@ struct PourDetailView: View {
                     }
                     .padding(.top, 16)
 
-                    // Venue
+                    // Venue + action buttons
                     if !pour.placeLine.isEmpty {
-                        if let maps = pour.mapsURL {
-                            Link(destination: maps) {
-                                Label(pour.placeLine, systemImage: "mappin.and.ellipse")
-                            }
+                        Label(pour.placeLine, systemImage: "mappin.and.ellipse")
                             .font(.subheadline)
-                        } else {
-                            Label(pour.placeLine, systemImage: "mappin.and.ellipse")
-                                .font(.subheadline)
+                            .foregroundStyle(.secondary)
+
+                        HStack(spacing: 10) {
+                            if let maps = pour.mapsURL {
+                                Link(destination: maps) {
+                                    Label("Maps", systemImage: "map")
+                                        .font(.caption.weight(.medium))
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 7)
+                                        .background(Color(.secondarySystemBackground))
+                                        .clipShape(Capsule())
+                                }
+                            }
+                            if let yelp = pour.yelpURL {
+                                Link(destination: yelp) {
+                                    Label("Yelp", systemImage: "star.bubble")
+                                        .font(.caption.weight(.medium))
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 7)
+                                        .background(Color(.secondarySystemBackground))
+                                        .clipShape(Capsule())
+                                }
+                            }
                         }
+                        .foregroundStyle(.primary)
                     }
 
                     // Notes

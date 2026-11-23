@@ -55,6 +55,20 @@ struct Pour: Identifiable, Hashable {
         ]
         return c.url
     }
+
+    /// Opens Yelp search for the venue. Uses location when available, otherwise falls back to city.
+    var yelpURL: URL? {
+        guard !venue.isEmpty else { return nil }
+        var c = URLComponents(string: "https://www.yelp.com/search")!
+        var items: [URLQueryItem] = [URLQueryItem(name: "find_desc", value: venue)]
+        if !city.isEmpty {
+            items.append(URLQueryItem(name: "find_loc", value: city))
+        } else if let latitude, let longitude {
+            items.append(URLQueryItem(name: "find_loc", value: "\(latitude),\(longitude)"))
+        }
+        c.queryItems = items
+        return c.url
+    }
 }
 
 // MARK: - Comment
